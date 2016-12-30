@@ -1,5 +1,6 @@
 
 import os
+import time
 
 import tensorflow as tf
 
@@ -58,6 +59,16 @@ class _TensorflowProvider:
         if self.cpu_only:
             config = tf.ConfigProto(device_count={'GPU': 0})
         self._sess = tf.Session(graph=self.graph, config=config)
+
+        # intialize variables
+        self._sess.run([
+            self.logits_var.initializer,
+            self.labels_var.initializer
+        ], feed_dict={
+            self.logits: self.dataset.logits,
+            self.labels: self.dataset.labels
+        })
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -67,38 +78,29 @@ class _TensorflowProvider:
     def __iter__(self):
         return iter(zip(self.benchmark_names, self.benchmarkers))
 
-    def _initalize_variables(self):
-        self._sess.run([
-            self.logits_var.initializer,
-            self.labels_var.initializer
-        ], feed_dict={
-            self.logits: self.dataset.logits,
-            self.labels: self.dataset.labels
-        })
-
-    def sparsemax(self, epochs=1):
-        self._initalize_variables()
-
-        for _ in range(epochs):
+    def sparsemax(self, iterations=1):
+        tick = time.perf_counter()
+        for _ in range(iterations):
             self._sess.run(self._sparsemax)
+        return time.perf_counter() - tick
 
-    def sparsemax_grad(self, epochs=1):
-        self._initalize_variables()
-
-        for _ in range(epochs):
+    def sparsemax_grad(self, iterations=1):
+        tick = time.perf_counter()
+        for _ in range(iterations):
             self._sess.run(self._sparsemax_grad)
+        return time.perf_counter() - tick
 
-    def sparsemax_loss(self, epochs=1):
-        self._initalize_variables()
-
-        for _ in range(epochs):
+    def sparsemax_loss(self, iterations=1):
+        tick = time.perf_counter()
+        for _ in range(iterations):
             self._sess.run(self._sparsemax_loss)
+        return time.perf_counter() - tick
 
-    def sparsemax_loss_grad(self, epochs=1):
-        self._initalize_variables()
-
-        for _ in range(epochs):
+    def sparsemax_loss_grad(self, iterations=1):
+        tick = time.perf_counter()
+        for _ in range(iterations):
             self._sess.run(self._sparsemax_loss_grad)
+        return time.perf_counter() - tick
 
 
 class SparsemaxKernelCPU(_TensorflowProvider):

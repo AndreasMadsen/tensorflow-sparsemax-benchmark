@@ -1,5 +1,5 @@
 
-.PHONY: all clean benchmark
+.PHONY: all build benchmark clean
 
 #
 # Compiler flags
@@ -51,14 +51,19 @@ endif
 #
 all: sparsemax-defun-all sparsemax-kernel-all sparsemax-name-scope-all
 
-include sparsemax_defun/build.mk
-include sparsemax_kernel/build.mk
-include sparsemax_name_scope/build.mk
+build: sparsemax-kernel-build
 
-benchmark:
+benchmark: build
 	PYTHONPATH=./ python3 benchmark/run_timings.py
 
 clean:
 	rm -f **/**/*.o
 	rm -f **/**/*.so
 	rm -rf **/**/__pycache__
+
+#
+# specific targets
+#
+include sparsemax_defun/build.mk
+include sparsemax_kernel/build.mk
+include sparsemax_name_scope/build.mk

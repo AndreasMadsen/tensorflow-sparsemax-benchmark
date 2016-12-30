@@ -1,5 +1,4 @@
 
-import time
 import os.path as path
 
 import numpy as np
@@ -13,10 +12,11 @@ resultsdir = path.join(thisdir, '..', 'results')
 
 
 def core_timings(providers, datasets,
-                 iterations=10, epochs=100, verbose=False):
+                 repetitions=10, iterations=100, preheat_iterations=100,
+                 verbose=False):
     col_names = [''] * len(providers)
     row_names = [''] * len(datasets) * 4
-    results = np.zeros((len(datasets) * 4, len(providers), iterations))
+    results = np.zeros((len(datasets) * 4, len(providers), repetitions))
 
     for dataset_i, dataset in enumerate(datasets):
         if verbose:
@@ -35,16 +35,20 @@ def core_timings(providers, datasets,
                         print('    ' + benchmarker_name)
 
                     row_index = dataset_i * 4 + benchmarker_i
-                    row_names[row_index] = "%s %s" % (dataset.name, benchmarker_name)
+                    row_names[row_index] = "%s %s" % (
+                        dataset.name, benchmarker_name
+                    )
 
-                    for iteration_i in range(iterations):
-                        tick = time.perf_counter()
-                        benchmarker(epochs=epochs)
-                        tock = time.perf_counter() - tick
-                        results[row_index, provider_i, iteration_i] = tock
+                    # preheat the graph
+                    benchmarker(iterations=preheat_iterations)
+
+                    # benchmark the graph
+                    for repetition_i in range(repetitions):
+                        took = benchmarker(iterations=iterations)
+                        results[row_index, provider_i, repetition_i] = took
 
                         if verbose:
-                            print('      %d: %f' % (iteration_i, tock))
+                            print('      %d: %f' % (repetition_i, took))
 
     return (results, col_names, row_names)
 

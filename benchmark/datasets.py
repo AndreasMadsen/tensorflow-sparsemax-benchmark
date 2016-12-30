@@ -20,5 +20,5 @@ all_datasets = [
     CreateDataset(10),
     CreateDataset(100),
     CreateDataset(512),
-    CreateDataset(2**14, obs=20)  # 16K
+    CreateDataset(2**14, obs=512)  # 16K
 ]
